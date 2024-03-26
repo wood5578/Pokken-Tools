@@ -63,9 +63,16 @@ namespace DRPRepacker
                 return false;
 
             DRPEntry entry = Entries[file];
-            byte[] cdata = Util.Compress(data);
-
-            entry.Files[partNum] = new DRPFileEntry(cdata, data.Length);
+            if (entry.Unk == 1)
+            {
+                byte[] cdata = Util.Compress(data);
+                entry.Files[partNum] = new DRPFileEntry(cdata, data.Length);
+            }
+            else
+            {
+                byte[] cdata = data;
+                entry.Files[partNum] = new DRPFileEntry(cdata, data.Length);
+            }
             return true;
         }
         public Dictionary<string, byte[]> ExtractFiles()
