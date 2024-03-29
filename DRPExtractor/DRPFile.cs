@@ -44,7 +44,22 @@ namespace DRPExtractor
                     for (int i = 0; i < _filecount; i++)
                     {
                         var entry = new DRPEntry(reader);
-                        Entries.Add(entry.Filename, entry);
+
+                        if (Entries.ContainsKey(entry.Filename))
+                        {
+                            int suffix = 1;
+                            string newKey = entry.Filename + "[" + suffix + "]";
+                            while (Entries.ContainsKey(newKey))
+                            {
+                                suffix++;
+                                newKey = entry.Filename + "[" + suffix + "]";
+                            }
+                            Entries.Add(newKey, entry);
+                        }
+                        else
+                        {
+                            Entries.Add(entry.Filename, entry);
+                        }
                     }
                 }
             }
@@ -70,8 +85,19 @@ namespace DRPExtractor
         {
             Dictionary<string, byte[]> ret = new Dictionary<string, byte[]>(FileCount);
             foreach (var entry in Entries)
-                ret = ret.Concat(entry.Value.ExtractFiles()).ToDictionary(x => x.Key, x => x.Value);
-
+            {
+                foreach (var fileEntry in entry.Value.ExtractFiles())
+                {
+                    string key = fileEntry.Key;
+                    int suffix = 1;
+                    while (ret.ContainsKey(key))
+                    {
+                        key = fileEntry.Key + "[" + suffix + "]";
+                        suffix++;
+                    }
+                    ret.Add(key, fileEntry.Value);
+                }
+            }
             return ret;
         }
         public void Rebuild()
@@ -158,6 +184,7 @@ namespace DRPExtractor
                 int decompLen = reader.ReadBint32();
                 Files[i] = new DRPFileEntry(reader.ReadBytes(FileEndOffsets[i] - 4), decompLen); // -4 to account for decompLen field included in  FileEntry
             }
+            reader.BaseStream.Position = basaddr + EntrySize;
         }
 
         public void Rebuild()

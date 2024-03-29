@@ -24,13 +24,35 @@ namespace DRPExtractor
             }
 
             var drp = new DRPFile(args[0]);
+            int loopcount = 0;
+            var specificEntry = drp.Entries.ElementAt(loopcount).Value;
+            int NumOfEntries = drp.Entries.Count;
 
             Directory.CreateDirectory(Path.GetFileNameWithoutExtension(args[0]));
             foreach(var entry in drp.ExtractFiles())
             {
-                var data = Util.DeCompress(entry.Value);
-                var path = Path.Combine(Path.GetFileNameWithoutExtension(args[0]), entry.Key);
-                File.WriteAllBytes(path, data);
+                if (specificEntry.Subfiles > 1)
+                {
+                    NumOfEntries = NumOfEntries + (specificEntry.Subfiles - 1) ;
+                }
+                
+                if (NumOfEntries > loopcount)
+                {    
+                    if (specificEntry.Unk == 1)
+                    {
+                        var data = Util.DeCompress(entry.Value);
+                        var path = Path.Combine(Path.GetFileNameWithoutExtension(args[0]), entry.Key);
+                        File.WriteAllBytes(path, data);
+                    }
+                    else
+                    {                        
+                        int isCompressed = specificEntry.Unk;
+                        var data = entry.Value;
+                        var path = Path.Combine(Path.GetFileNameWithoutExtension(args[0]), entry.Key);
+                        File.WriteAllBytes(path, data);
+                    }
+                }
+                loopcount++;
             }
         }
     }
